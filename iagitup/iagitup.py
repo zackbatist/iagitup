@@ -43,7 +43,9 @@ def repo_download(github_repo_url):
 
     # parsing url to initialize the github api rul and get the repo_data
     gh_user, gh_repo = github_repo_url.split('/')[3:]
-    gh_api_url = "https://api.github.com/repos/{}/{}".format(gh_user, gh_repo)
+    gh_api_url = "https://gitlab.com/api/v4/projects/{}%2F{}".format(gh_user, gh_repo)
+#    gh_user, gh_repo = github_repo_url.split('/')[3:]
+#    gh_api_url = "https://api.github.com/repos/{}/{}".format(gh_user, gh_repo)
 
     # delete the temp directory if exists
     repo_folder = os.path.join(download_dir, gh_repo)
@@ -57,7 +59,7 @@ def repo_download(github_repo_url):
         # download the repo from github
         repo_folder = os.path.join(download_dir, gh_repo)
         try:
-            git.Git().clone(gh_repo_data['clone_url'], repo_folder)
+            git.Git().clone(gh_repo_data['http_url_to_repo'], repo_folder)
         except Exception as e:
             print('Error occurred while downloading: {}'.format(github_repo_url))
             print(str(e))
@@ -129,28 +131,28 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
                 bundle_filename -- the git bundle filename
     """
     # formatting some dates string
-    d = datetime.strptime(gh_repo_data['created_at'], '%Y-%m-%dT%H:%M:%SZ')
-    pushed = datetime.strptime(gh_repo_data['pushed_at'], '%Y-%m-%dT%H:%M:%SZ')
+    d = datetime.strptime(gh_repo_data['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+    pushed = datetime.strptime(gh_repo_data['last_activity_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
     pushed_date = pushed.strftime('%Y-%m-%d_%H-%M-%S')
     raw_pushed_date = pushed.strftime('%Y-%m-%d %H:%M:%S')
     date = pushed.strftime('%Y-%m-%d')
     year = pushed.year
 
     # preparing some names
-    repo_name = gh_repo_data['full_name'].replace('/', '-')
-    originalurl = gh_repo_data['html_url']
+    repo_name = gh_repo_data['path_with_namespace'].replace('/', '-')
+    originalurl = gh_repo_data['web_url']
     bundle_filename = '{}_-_{}'.format(repo_name, pushed_date)
 
     # preparing some description
-    description_footer = 'To restore the repository download the bundle <pre><code>wget https://archive.org/download/github.com-{0}/{0}.bundle</code></pre> and run: <pre><code> git clone {0}.bundle </code></pre>'.format(bundle_filename)
+    description_footer = 'To restore the repository download the bundle <pre><code>wget https://archive.org/download/gitlab.com-{0}/{0}.bundle</code></pre> and run: <pre><code> git clone {0}.bundle </code></pre>'.format(bundle_filename)
     description = '<br/> {0} <br/><br/> {1} <br/>{2}'.format(gh_repo_data['description'], get_description_from_readme(gh_repo_folder), description_footer)
 
     # preparing uploader metadata
-    uploader_url = gh_repo_data['owner']['html_url']
-    uploader_name = gh_repo_data['owner']['login']
+    uploader_url = gh_repo_data['namespace']['web_url']
+    uploader_name = gh_repo_data['namespace']['path']
 
     # let's grab the avatar too
-    uploader_avatar_url = gh_repo_data['owner']['avatar_url']
+    uploader_avatar_url = gh_repo_data['avatar_url']
     pic = requests.get(uploader_avatar_url, stream = True)
     uploader_avatar_path = os.path.join(gh_repo_folder, 'cover.jpg')
     with open(uploader_avatar_path, 'wb') as f:
@@ -160,7 +162,7 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
     # some Internet Archive Metadata
     collection = 'open_source_software'
     mediatype = 'software'
-    subject = 'GitHub;code;software;git'
+    subject = 'GitLab;code;software;git'
 
     uploader = '{} - {}'.format(__main_name__, __version__)
 
@@ -176,7 +178,7 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
 
     # inizializing the internet archive item name
     # here we set the ia identifier
-    itemname = '%s-%s_-_%s' % ('github.com', repo_name, pushed_date)
+    itemname = '%s-%s_-_%s' % ('gitlab.com', repo_name, pushed_date)
     title = '%s' % (itemname)
 
     #initializing the main metadata
