@@ -43,7 +43,7 @@ def repo_download(github_repo_url):
 
     # parsing url to initialize the github api rul and get the repo_data
     gh_user, gh_repo = github_repo_url.split('/')[3:]
-    gh_api_url = "https://api.github.com/repos/{}/{}".format(gh_user, gh_repo)
+    gh_api_url = "https://codeberg.org/api/v1/repos/{}/{}".format(gh_user, gh_repo)
 
     # delete the temp directory if exists
     repo_folder = os.path.join(download_dir, gh_repo)
@@ -129,8 +129,8 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
                 bundle_filename -- the git bundle filename
     """
     # formatting some dates string
-    d = datetime.strptime(gh_repo_data['created_at'], '%Y-%m-%dT%H:%M:%SZ')
-    pushed = datetime.strptime(gh_repo_data['pushed_at'], '%Y-%m-%dT%H:%M:%SZ')
+    d = datetime.strptime(gh_repo_data['created_at'], '%Y-%m-%dT%H:%M:%S%z')
+    pushed = datetime.strptime(gh_repo_data['updated_at'], '%Y-%m-%dT%H:%M:%S%z')
     pushed_date = pushed.strftime('%Y-%m-%d_%H-%M-%S')
     raw_pushed_date = pushed.strftime('%Y-%m-%d %H:%M:%S')
     date = pushed.strftime('%Y-%m-%d')
@@ -142,11 +142,12 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
     bundle_filename = '{}_-_{}'.format(repo_name, pushed_date)
 
     # preparing some description
-    description_footer = 'To restore the repository download the bundle <pre><code>wget https://archive.org/download/github.com-{0}/{0}.bundle</code></pre> and run: <pre><code> git clone {0}.bundle </code></pre>'.format(bundle_filename)
+    description_footer = 'To restore the repository download the bundle <pre><code>wget https://archive.org/download/codeberg.org-{0}/{0}.bundle</code></pre> and run: <pre><code> git clone {0}.bundle </code></pre>'.format(bundle_filename)
     description = '<br/> {0} <br/><br/> {1} <br/>{2}'.format(gh_repo_data['description'], get_description_from_readme(gh_repo_folder), description_footer)
 
     # preparing uploader metadata
-    uploader_url = gh_repo_data['owner']['html_url']
+    uploader_url = 'https://codeberg.org/{}'.format(gh_repo_data['owner']['login'])
+    #uploader_url = gh_repo_data['owner']['html_url']
     uploader_name = gh_repo_data['owner']['login']
 
     # let's grab the avatar too
@@ -160,7 +161,7 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
     # some Internet Archive Metadata
     collection = 'open_source_software'
     mediatype = 'software'
-    subject = 'GitHub;code;software;git'
+    subject = 'Codeberg;code;software;git'
 
     uploader = '{} - {}'.format(__main_name__, __version__)
 
@@ -176,7 +177,7 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
 
     # inizializing the internet archive item name
     # here we set the ia identifier
-    itemname = '%s-%s_-_%s' % ('github.com', repo_name, pushed_date)
+    itemname = '%s-%s_-_%s' % ('codeberg.org', repo_name, pushed_date)
     title = '%s' % (itemname)
 
     #initializing the main metadata
